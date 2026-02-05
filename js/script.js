@@ -1,7 +1,9 @@
+// ===== Storage + DB =====
 const STORAGE_KEY = "todos-v2";
 const DB_NAME = "todo-attachments";
 const DB_STORE = "files";
 
+// ===== DOM Elements =====
 const form = document.getElementById("todoForm");
 const taskInput = document.getElementById("taskInput");
 const dateInput = document.getElementById("dateInput");
@@ -18,11 +20,13 @@ const intro = document.getElementById("intro");
 const app = document.getElementById("app");
 const enterBtn = document.getElementById("enterBtn");
 const timeSep = document.querySelector(".time-sep");
-const mobileQuery = window.matchMedia("(max-width: 640px)");
+const mobileQuery = window.matchMedia("(hover: none) and (pointer: coarse)");
 
+// ===== State =====
 let todos = loadTodos();
 const attachmentUrls = new Map();
 
+// ===== Intro Screen =====
 if (enterBtn && intro && app) {
   enterBtn.addEventListener("click", () => {
     intro.classList.add("hidden");
@@ -30,8 +34,10 @@ if (enterBtn && intro && app) {
   });
 }
 
+// ===== Custom Select UI =====
 initCustomSelects();
 
+// ===== Event Listeners =====
 form.addEventListener("submit", addTodo);
 filter.addEventListener("change", renderTodos);
 searchInput.addEventListener("input", renderTodos);
@@ -48,6 +54,7 @@ mobileQuery.addEventListener("change", syncMobileHelpers);
 renderTodos();
 syncMobileHelpers();
 
+// ===== Feature: Add Todo (with validation) =====
 async function addTodo(e) {
   e.preventDefault();
 
@@ -106,6 +113,7 @@ async function addTodo(e) {
   syncMobileHelpers();
 }
 
+// ===== Feature: Delete, Edit, Open Attachment =====
 async function handleListClick(e) {
   const target = e.target;
   const li = target.closest("li");
@@ -185,6 +193,7 @@ async function handleListClick(e) {
   }
 }
 
+// ===== Feature: Toggle Complete + Auto-delete attachment =====
 async function handleListChange(e) {
   const target = e.target;
   if (!target.classList.contains("checkbox")) return;
@@ -205,6 +214,7 @@ async function handleListChange(e) {
   renderTodos();
 }
 
+// ===== Feature: Display Todo List + Filter + Search =====
 async function renderTodos() {
   const today = getTodayLocal();
   const query = searchInput.value.trim().toLowerCase();
@@ -278,6 +288,7 @@ async function renderTodos() {
   await hydrateAttachmentPreviews(visible);
 }
 
+// ===== Local Storage Helpers =====
 function saveTodos() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
 }
@@ -293,6 +304,7 @@ function loadTodos() {
   }
 }
 
+// ===== Utilities =====
 function escapeHtml(value) {
   return value
     .replaceAll("&", "&amp;")
@@ -315,6 +327,7 @@ function getTodayLocal() {
   return `${year}-${month}-${day}`;
 }
 
+// ===== Custom Select UI Logic =====
 function initCustomSelects() {
   const selects = document.querySelectorAll(".custom-select");
   if (!selects.length) return;
@@ -366,6 +379,7 @@ function initCustomSelects() {
   });
 }
 
+// ===== Mobile Helpers =====
 function syncMobilePlaceholders() {
   const wraps = document.querySelectorAll(".input-wrap");
   wraps.forEach((wrap) => {
@@ -391,6 +405,7 @@ function syncMobileHelpers() {
   syncTimeSeparator();
 }
 
+// ===== Attachment Preview Helpers =====
 function clearAttachmentUrls() {
   for (const url of attachmentUrls.values()) {
     URL.revokeObjectURL(url);
@@ -418,6 +433,7 @@ async function hydrateAttachmentPreviews(items) {
   }
 }
 
+// ===== IndexedDB Setup =====
 function openDb() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
@@ -432,6 +448,7 @@ function openDb() {
   });
 }
 
+// ===== Attachment CRUD =====
 async function saveAttachment(file) {
   const db = await openDb();
   const id = crypto.randomUUID();
