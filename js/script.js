@@ -17,6 +17,8 @@ const doneCount = document.getElementById("doneCount");
 const intro = document.getElementById("intro");
 const app = document.getElementById("app");
 const enterBtn = document.getElementById("enterBtn");
+const timeSep = document.querySelector(".time-sep");
+const mobileQuery = window.matchMedia("(max-width: 640px)");
 
 let todos = loadTodos();
 const attachmentUrls = new Map();
@@ -35,8 +37,16 @@ filter.addEventListener("change", renderTodos);
 searchInput.addEventListener("input", renderTodos);
 list.addEventListener("click", handleListClick);
 list.addEventListener("change", handleListChange);
+dateInput.addEventListener("input", syncMobilePlaceholders);
+dateInput.addEventListener("change", syncMobilePlaceholders);
+timeStartInput.addEventListener("input", syncMobileHelpers);
+timeStartInput.addEventListener("change", syncMobileHelpers);
+timeEndInput.addEventListener("input", syncMobileHelpers);
+timeEndInput.addEventListener("change", syncMobileHelpers);
+mobileQuery.addEventListener("change", syncMobileHelpers);
 
 renderTodos();
+syncMobileHelpers();
 
 async function addTodo(e) {
   e.preventDefault();
@@ -93,6 +103,7 @@ async function addTodo(e) {
   timeEndInput.value = "";
   priorityInput.value = "medium";
   attachmentInput.value = "";
+  syncMobileHelpers();
 }
 
 async function handleListClick(e) {
@@ -139,15 +150,21 @@ async function handleListClick(e) {
     const nextDate = prompt("Edit date (YYYY-MM-DD):", todo.date);
     if (nextDate === null || nextDate.trim() === "") return;
 
-    const nextTimeStart = prompt("Edit start time (HH:MM):", todo.timeStart || "");
+    const nextTimeStart = prompt(
+      "Edit start time (HH:MM):",
+      todo.timeStart || "",
+    );
     if (nextTimeStart === null || nextTimeStart.trim() === "") return;
 
-    const nextTimeEnd = prompt("Edit end time (HH:MM, optional):", todo.timeEnd || "");
+    const nextTimeEnd = prompt(
+      "Edit end time (HH:MM, optional):",
+      todo.timeEnd || "",
+    );
     if (nextTimeEnd === null) return;
 
     const nextPriority = prompt(
       "Edit priority (low, medium, high):",
-      todo.priority
+      todo.priority,
     );
     if (nextPriority === null || nextPriority.trim() === "") return;
 
@@ -189,7 +206,7 @@ async function handleListChange(e) {
 }
 
 async function renderTodos() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = getTodayLocal();
   const query = searchInput.value.trim().toLowerCase();
   const mode = filter.value;
 
@@ -215,7 +232,7 @@ async function renderTodos() {
               ${
                 todo.attachment.isImage
                   ? `<img class="preview" data-attachment-id="${todo.attachment.id}" alt="${escapeHtml(
-                      todo.attachment.name
+                      todo.attachment.name,
                     )}" />`
                   : ""
               }
@@ -223,7 +240,7 @@ async function renderTodos() {
               ${
                 todo.attachment.type && todo.attachment.type !== "unknown"
                   ? `<span class="filetype">${escapeHtml(
-                      todo.attachment.type
+                      todo.attachment.type,
                     )}</span>`
                   : ""
               }
@@ -290,6 +307,14 @@ function formatTimeRange(start, end) {
   return `${start} - ${end}`;
 }
 
+function getTodayLocal() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function initCustomSelects() {
   const selects = document.querySelectorAll(".custom-select");
   if (!selects.length) return;
@@ -317,7 +342,7 @@ function initCustomSelects() {
       options.forEach((opt) => {
         opt.setAttribute(
           "aria-selected",
-          opt.dataset.value === native.value ? "true" : "false"
+          opt.dataset.value === native.value ? "true" : "false",
         );
       });
     };
@@ -339,6 +364,31 @@ function initCustomSelects() {
       });
     });
   });
+}
+
+function syncMobilePlaceholders() {
+  const wraps = document.querySelectorAll(".input-wrap");
+  wraps.forEach((wrap) => {
+    const input = wrap.querySelector("input");
+    if (!input) return;
+    wrap.classList.toggle("has-value", input.value !== "");
+  });
+}
+
+function syncTimeSeparator() {
+  if (!timeSep) return;
+  if (!mobileQuery.matches) {
+    timeSep.textContent = "-";
+    return;
+  }
+  const start = timeStartInput.value;
+  const end = timeEndInput.value;
+  timeSep.textContent = start && !end ? "s.d" : "-";
+}
+
+function syncMobileHelpers() {
+  syncMobilePlaceholders();
+  syncTimeSeparator();
 }
 
 function clearAttachmentUrls() {
@@ -385,7 +435,12 @@ function openDb() {
 async function saveAttachment(file) {
   const db = await openDb();
   const id = crypto.randomUUID();
-  const record = { id, name: file.name, type: file.type || "unknown", blob: file };
+  const record = {
+    id,
+    name: file.name,
+    type: file.type || "unknown",
+    blob: file,
+  };
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_STORE, "readwrite");
