@@ -4,9 +4,11 @@
     <meta charset="UTF-8" />
     <title>To-Do List</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- CSS External -->
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <!-- Intro Section -->
     <div class="intro" id="intro">
       <div class="intro-card">
         <img
@@ -24,15 +26,20 @@
       </div>
     </div>
 
+    <!-- Main App Section -->
     <div class="app hidden" id="app">
       <h1>To-Do List</h1>
 
+      <!-- Feature: Form To-Do -->
+      <!-- Form Input -->
       <form id="todoForm">
+        <!-- Feature: Add (input task) -->
         <input
           type="text"
           id="taskInput"
           placeholder="What do you need to do?"
         />
+        <!-- Feature: Date Input -->
         <div class="input-wrap input-date">
           <input type="date" id="dateInput" />
           <span class="mobile-placeholder">dd/mm/yyyy</span>
@@ -54,9 +61,12 @@
           <option value="high">High Priority</option>
         </select>
         <input type="file" id="attachmentInput" />
+        <!-- Feature: Add (submit) -->
         <button type="submit">Add</button>
       </form>
 
+      <!-- Feature: Filter -->
+      <!-- Search + Filter -->
       <div class="controls">
         <input type="text" id="searchInput" placeholder="Search tasks..." />
         <select id="filter">
@@ -68,14 +78,18 @@
         </select>
       </div>
 
+      <!-- Stats -->
       <div class="stats">
         <span id="totalCount">0 total</span>
         <span id="doneCount">0 done</span>
       </div>
 
+      <!-- Feature: Display Todo List + Delete -->
+      <!-- Todo List -->
       <ul id="todoList"></ul>
     </div>
 
+    <!-- Javascript External -->
     <script src="js/script.js"></script>
   </body>
 </html>
