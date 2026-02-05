@@ -22,6 +22,18 @@ const enterBtn = document.getElementById("enterBtn");
 const timeSep = document.querySelector(".time-sep");
 const mobileQuery = window.matchMedia("(hover: none) and (pointer: coarse)");
 
+// ===== Edit Modal Elements =====
+const editModal = document.getElementById("editModal");
+const editForm = document.getElementById("editForm");
+const editIdInput = document.getElementById("editId");
+const editTaskInput = document.getElementById("editTaskInput");
+const editDateInput = document.getElementById("editDateInput");
+const editTimeStartInput = document.getElementById("editTimeStartInput");
+const editTimeEndInput = document.getElementById("editTimeEndInput");
+const editPriorityInput = document.getElementById("editPriorityInput");
+const editCloseBtn = document.getElementById("editCloseBtn");
+const editCancelBtn = document.getElementById("editCancelBtn");
+
 // ===== State =====
 let todos = loadTodos();
 const attachmentUrls = new Map();
@@ -50,6 +62,25 @@ timeStartInput.addEventListener("change", syncMobileHelpers);
 timeEndInput.addEventListener("input", syncMobileHelpers);
 timeEndInput.addEventListener("change", syncMobileHelpers);
 mobileQuery.addEventListener("change", syncMobileHelpers);
+
+// ===== Edit Modal Events =====
+if (editForm) {
+  editForm.addEventListener("submit", handleEditSubmit);
+}
+if (editCloseBtn) {
+  editCloseBtn.addEventListener("click", closeEditModal);
+}
+if (editCancelBtn) {
+  editCancelBtn.addEventListener("click", closeEditModal);
+}
+if (editModal) {
+  editModal.addEventListener("click", (e) => {
+    if (e.target === editModal) closeEditModal();
+  });
+}
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeEditModal();
+});
 
 renderTodos();
 syncMobileHelpers();
@@ -149,48 +180,77 @@ async function handleListClick(e) {
   if (target.classList.contains("edit")) {
     const todo = todos.find((t) => t.id === id);
     if (!todo) return;
-
-    const nextText = prompt("Edit task:", todo.text);
-    if (nextText === null) return;
-    const trimmed = nextText.trim();
-    if (trimmed === "") return;
-
-    const nextDate = prompt("Edit date (YYYY-MM-DD):", todo.date);
-    if (nextDate === null || nextDate.trim() === "") return;
-
-    const nextTimeStart = prompt(
-      "Edit start time (HH:MM):",
-      todo.timeStart || "",
-    );
-    if (nextTimeStart === null || nextTimeStart.trim() === "") return;
-
-    const nextTimeEnd = prompt(
-      "Edit end time (HH:MM, optional):",
-      todo.timeEnd || "",
-    );
-    if (nextTimeEnd === null) return;
-
-    const nextPriority = prompt(
-      "Edit priority (low, medium, high):",
-      todo.priority,
-    );
-    if (nextPriority === null || nextPriority.trim() === "") return;
-
-    const normalized = nextPriority.trim().toLowerCase();
-    if (!["low", "medium", "high"].includes(normalized)) {
-      alert("Priority must be: low, medium, or high.");
-      return;
-    }
-
-    todo.text = trimmed;
-    todo.date = nextDate.trim();
-    todo.timeStart = nextTimeStart.trim();
-    todo.timeEnd = nextTimeEnd.trim();
-    todo.priority = normalized;
-
-    saveTodos();
-    renderTodos();
+    openEditModal(todo);
   }
+}
+
+// ===== Feature: Edit Modal =====
+function openEditModal(todo) {
+  if (!editModal || !editForm) return;
+  editIdInput.value = todo.id;
+  editTaskInput.value = todo.text;
+  editDateInput.value = todo.date;
+  editTimeStartInput.value = todo.timeStart || "";
+  editTimeEndInput.value = todo.timeEnd || "";
+  editPriorityInput.value = todo.priority;
+  editModal.classList.remove("hidden");
+  editTaskInput.focus();
+}
+
+function closeEditModal() {
+  if (!editModal || editModal.classList.contains("hidden")) return;
+  editModal.classList.add("hidden");
+  if (editForm) editForm.reset();
+}
+
+function handleEditSubmit(e) {
+  e.preventDefault();
+  const id = editIdInput.value;
+  const todo = todos.find((t) => t.id === id);
+  if (!todo) {
+    closeEditModal();
+    return;
+  }
+
+  const nextText = editTaskInput.value.trim();
+  if (nextText === "") {
+    alert("Task wajib diisi.");
+    return;
+  }
+
+  const nextDateValue = editDateInput.value.trim();
+  if (nextDateValue === "" || !isValidDateString(nextDateValue)) {
+    alert("Tanggal harus format YYYY-MM-DD.");
+    return;
+  }
+
+  const nextTimeStartValue = editTimeStartInput.value.trim();
+  if (nextTimeStartValue === "" || !isValidTimeString(nextTimeStartValue)) {
+    alert("Jam mulai harus format HH:MM.");
+    return;
+  }
+
+  const nextTimeEndValue = editTimeEndInput.value.trim();
+  if (nextTimeEndValue !== "" && !isValidTimeString(nextTimeEndValue)) {
+    alert("Jam selesai harus format HH:MM.");
+    return;
+  }
+
+  const nextPriorityValue = editPriorityInput.value;
+  if (!['low', 'medium', 'high'].includes(nextPriorityValue)) {
+    alert("Priority must be: low, medium, or high.");
+    return;
+  }
+
+  todo.text = nextText;
+  todo.date = nextDateValue;
+  todo.timeStart = nextTimeStartValue;
+  todo.timeEnd = nextTimeEndValue;
+  todo.priority = nextPriorityValue;
+
+  saveTodos();
+  renderTodos();
+  closeEditModal();
 }
 
 // ===== Feature: Toggle Complete + Auto-delete attachment =====
@@ -305,6 +365,24 @@ function loadTodos() {
 }
 
 // ===== Utilities =====
+// Validation helpers for edit prompts (keeps filters reliable)
+function isValidDateString(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function isValidTimeString(value) {
+  if (!/^\d{2}:\d{2}$/.test(value)) return false;
+  const [hours, minutes] = value.split(":").map(Number);
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
+
 function escapeHtml(value) {
   return value
     .replaceAll("&", "&amp;")

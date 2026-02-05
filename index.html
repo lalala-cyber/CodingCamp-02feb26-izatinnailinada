@@ -33,7 +33,9 @@
       <!-- Feature: Form To-Do -->
       <!-- Form Input -->
       <form id="todoForm">
+        <!-- Accessibility: screen-reader labels for form inputs -->
         <!-- Feature: Add (input task) -->
+        <label class="sr-only" for="taskInput">Task</label>
         <input
           type="text"
           id="taskInput"
@@ -41,25 +43,30 @@
         />
         <!-- Feature: Date Input -->
         <div class="input-wrap input-date">
+          <label class="sr-only" for="dateInput">Date</label>
           <input type="date" id="dateInput" />
           <span class="mobile-placeholder">dd/mm/yyyy</span>
         </div>
         <div class="time-range">
           <div class="input-wrap input-time">
+            <label class="sr-only" for="timeStartInput">Start time</label>
             <input type="time" id="timeStartInput" />
             <span class="mobile-placeholder">00:00</span>
           </div>
           <span class="time-sep">-</span>
           <div class="input-wrap input-time">
+            <label class="sr-only" for="timeEndInput">End time</label>
             <input type="time" id="timeEndInput" />
             <span class="mobile-placeholder">00:00</span>
           </div>
         </div>
+        <label class="sr-only" for="priorityInput">Priority</label>
         <select id="priorityInput">
           <option value="low">Low Priority</option>
           <option value="medium" selected>Medium Priority</option>
           <option value="high">High Priority</option>
         </select>
+        <label class="sr-only" for="attachmentInput">Attachment</label>
         <input type="file" id="attachmentInput" />
         <!-- Feature: Add (submit) -->
         <button type="submit">Add</button>
@@ -67,8 +74,11 @@
 
       <!-- Feature: Filter -->
       <!-- Search + Filter -->
+      <!-- Accessibility: screen-reader labels for controls -->
       <div class="controls">
+        <label class="sr-only" for="searchInput">Search tasks</label>
         <input type="text" id="searchInput" placeholder="Search tasks..." />
+        <label class="sr-only" for="filter">Filter tasks</label>
         <select id="filter">
           <option value="all">All Tasks</option>
           <option value="today">Today</option>
@@ -87,6 +97,55 @@
       <!-- Feature: Display Todo List + Delete -->
       <!-- Todo List -->
       <ul id="todoList"></ul>
+    </div>
+
+
+    <!-- Edit Modal -->
+    <div
+      class="modal hidden"
+      id="editModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="editTitle"
+    >
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="editTitle">Edit Task</h2>
+          <button class="modal-close" id="editCloseBtn" type="button">Close</button>
+        </div>
+        <form id="editForm" class="edit-form">
+          <!-- Edit form fields -->
+          <input type="hidden" id="editId" />
+          <label class="field">
+            <span>Task</span>
+            <input type="text" id="editTaskInput" required />
+          </label>
+          <label class="field">
+            <span>Date</span>
+            <input type="date" id="editDateInput" required />
+          </label>
+          <div class="field">
+            <span>Time</span>
+            <div class="time-range">
+              <input type="time" id="editTimeStartInput" required />
+              <span class="time-sep">-</span>
+              <input type="time" id="editTimeEndInput" />
+            </div>
+          </div>
+          <label class="field">
+            <span>Priority</span>
+            <select id="editPriorityInput">
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="secondary" id="editCancelBtn">Cancel</button>
+            <button type="submit">Save</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Javascript External -->
